@@ -118,6 +118,11 @@ function drawWalk(walk) {
 
   drawWay(walk[0]);
   drawMarkers(walk[1]);
+
+  document.getElementById('way').innerHTML = '';
+  for(i=0; i<walk[1].length; i++) {
+    document.getElementById('way').innerHTML += walk[1][i][2] + (i < walk[1].length - 1 ? ' <b>→</b> ' : '');
+  }
 }
 
 var routes = [];
