@@ -1,14 +1,14 @@
 
 function print(str) {
-    document.getElementById('test1').innerHTML += str + '<br>';
+    //document.getElementById('test1').innerHTML += str + '<br>';
 }
 
 function printJSON(json) {
-    document.getElementById('test1').innerHTML += JSON.stringify(json, null, 2) + '<br>';
+    //document.getElementById('test1').innerHTML += JSON.stringify(json, null, 2) + '<br>';
 }
 
 function cls() {
-    document.getElementById('test1').innerHTML = '';
+   // document.getElementById('test1').innerHTML = '';
 }
 
 
@@ -78,11 +78,69 @@ var mymap = undefined;
 var polygon = undefined;
 var drawing = false;
 var ready_to_draw = false;
+var markers = []
 
-function pushCoords() {
-    console.log(poly_coords);
+function getFilters() {
+  var arr = {'food':'yes', 'social_space':'yes', 'landmark':'yes', 'wc':'yes', 'transport':'yes'};
+
+  return arr;
 }
 
+function putMarker(place) {
+  var marker = L.marker([place[1][0], place[1][1]]).addTo(mymap);
+  markers[markers.length] = marker;
+}
+
+function drawMarkers(markers) {
+  for(i=0; i<markers.length; i++) {
+    print(markers[i]);
+    putMarker(markers[i]);
+    print('===');
+  }
+}
+
+var polyway = undefined;
+
+function drawWay(way) {
+  var coords = [];
+  for(var i=0; i<way.length; i++) {
+    coords[coords.length] = [ way[i]['latitude'], way[i]['longitude'] ];
+  }
+  polyway = L.polyline(coords, {color: 'red'}).addTo(mymap);
+}
+
+function drawWalk(walk) {
+    
+    removeMarkers();
+    if(polyway != undefined) {
+            mymap.removeLayer(polyway);
+    }
+
+  drawWay(walk[0]);
+  drawMarkers(walk[1]);
+}
+
+var routes = [];
+
+function pushCoords() {
+    print(poly_coords);
+    print(getFilters()['food']);
+    var data = getPlaces(getFilters(), poly_coords);
+    var places = data[1];
+    routes = data[0];
+    print(places.length);
+
+    drawWalk(routes[0]);
+    
+}
+
+var q = 0;
+
+function next() {
+    q = q + 1;
+    q = q % routes.length;
+    drawWalk(routes[q]);
+}
 
 function onMapClick(e) {
     if(!drawing) return;
@@ -140,12 +198,25 @@ function initMap() {
   mymap.on('mouseup ', onMouseUp);
 }
 
+function removeMarkers() {
+  for(var i=0; i<markers.length; i++) {
+    mymap.removeLayer(markers[i]);
+  }
+  markers = [];
+}
+
 function startDrawing() {
     mymap.dragging.disable();
     ready_to_draw = true;
     poly_coords = [];
-    mymap.removeLayer(polygon);
+    if(polygon != undefined) mymap.removeLayer(polygon);
+    removeMarkers();
+    if(polyway != undefined) {
+            mymap.removeLayer(polyway);
+    }
 }
+
+
 function start() {
 }
 
